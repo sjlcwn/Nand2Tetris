@@ -1,0 +1,153 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Keyboard.jack
+
+/**
+ * A library for handling user input from the keyboard.
+ */
+class Keyboard {
+    static int iUnit;
+    /** Initializes the keyboard. */
+    function void init() {
+        let iUnit=20;
+        return;
+    } 
+
+    /**
+     * Returns the character of the currently pressed key on the keyboard;
+     * if no key is currently pressed, returns 0.
+     *
+     * Recognizes all ASCII characters, as well as the following keys:
+     * new line = 128 = String.newline()
+     * backspace = 129 = String.backspace()
+     * left arrow = 130
+     * up arrow = 131
+     * right arrow = 132
+     * down arrow = 133
+     * home = 134
+     * End = 135
+     * page up = 136
+     * page down = 137
+     * insert = 138
+     * delete = 139
+     * ESC = 140
+     * F1 - F12 = 141 - 152
+     */
+    function char keyPressed() {
+        return Memory.peek(24576);
+    }
+
+    /**								
+     * Waits until a key is pressed on the keyboard and released,
+     * then echoes the key to the screen, and returns the character 
+     * of the pressed key.
+     */
+    function char readChar() {
+        var char cSpace;
+        let cSpace=Keyboard.keyPressed();
+        do Output.printChar(0);
+        while (cSpace=0)
+        {
+            let cSpace=Keyboard.keyPressed();
+        }
+        while (cSpace=Keyboard.keyPressed())
+        {
+        }
+        do Output.backSpace();
+        if ((cSpace>31)&(cSpace<127))
+        {
+            do Output.printChar(cSpace);
+        }
+        return cSpace;
+    }
+
+    /**								
+     * Displays the message on the screen, reads from the keyboard the entered
+     * text until a newline character is detected, echoes the text to the screen,
+     * and returns its value. Also handles user backspaces.
+     */
+    function String readLine(String message) {
+        var int iLength,iCurrent,iLoop;
+        var String sResult,sBack;
+        var char cSpace;
+        do Output.printString(message);
+        
+        let iLength=iUnit;
+        let iCurrent=0;
+        let sResult=String.new(iLength);
+        let cSpace=Keyboard.readChar();
+        while (~(cSpace=128))
+        {
+            if (cSpace=129)
+            {
+                if (~(iCurrent=0))
+                {
+                    let iCurrent=iCurrent-1;
+                    if (~(((iCurrent+iUnit)>iLength)|(iLength=iUnit)))
+                    {
+                        let iLength=iLength-iUnit;
+                    }
+                    let sBack=sResult;
+                    let sResult=String.new(iLength);
+                    let iLoop=0;
+                    while (iLoop<iCurrent)
+                    {
+                        do sResult.appendChar(sBack.charAt(iLoop));
+                        let iLoop=iLoop+1;
+                    }
+                    do sBack.dispose();
+                    do Output.backSpace();
+                }
+            }
+            else
+            {
+                if (cSpace<128)
+                {
+                    if (iCurrent=iLength)
+                    {
+                        let iLength=iLength+iUnit;
+                        let sBack=sResult;
+                        let sResult=String.new(iLength);
+                        let iLoop=0;
+                        while (iLoop<iCurrent)
+                        {
+                            do sResult.appendChar(sBack.charAt(iLoop));
+                            let iLoop=iLoop+1;
+                        }
+                        do sBack.dispose();
+                    }
+                    do sResult.appendChar(cSpace);
+                    let iCurrent=iCurrent+1;
+                }
+            }
+            let cSpace=Keyboard.readChar();
+        }
+        do Output.println();
+        let sBack=sResult;
+        let sResult=String.new(iCurrent);
+        let iLoop=0;
+        while (iLoop<iCurrent)
+        {
+            do sResult.appendChar(sBack.charAt(iLoop));
+            let iLoop=iLoop+1;
+        }
+        do sBack.dispose();
+        return sResult;
+    }   
+
+    /**								
+     * Displays the message on the screen, reads from the keyboard the entered
+     * text until a newline character is detected, echoes the text to the screen,
+     * and returns its integer value (until the first non-digit character in the
+     * entered text is detected). Also handles user backspaces. 
+     */
+    function int readInt(String message) {
+        var int iResult;
+        var String sSpace;
+        let sSpace=Keyboard.readLine(message);
+        let iResult=sSpace.intValue();
+        do sSpace.dispose();
+        return iResult;
+    }
+}

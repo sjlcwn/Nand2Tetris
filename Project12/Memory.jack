@@ -1,0 +1,139 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static Array mLast;
+    /** Initializes the class. */
+    function void init() {
+        let mLast=16382;
+        let mLast[1]=14335;
+        let mLast[0]=0;
+        return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        var Array memory;
+        let memory=address;
+        return memory[0];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        var Array memory;
+        let memory=address;
+        let memory[0]=value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+        var Array mBest,mBestBack,mLoop,mBack;
+        let mBest=0;
+        let mBestBack=0;
+        let mBack=0;
+        let mLoop=mLast;
+        while (~(mLoop=0))
+        {
+            if (size<mLoop[1])
+            {
+                if (mBest=0)
+                {
+                    let mBest=mLoop;
+                    let mBestBack=mBack;
+                }
+                else
+                {
+                    if (mBest[1]>mLoop[1])
+                    {
+                        let mBest=mLoop;
+                        let mBestBack=mBack;
+                    }
+                }
+            }
+            let mBack=mLoop;
+            let mLoop=mLoop[0];
+        }
+        if (~(mBest=0))
+        {
+            let mLoop=mBest-mBest[1]+3;
+            if (mBest[1]>(size+1))
+            {
+                let mLoop[-1]=size+1;
+                let mBest[1]=mBest[1]-size-1;
+            }
+            else
+            {
+                let mLoop[-1]=mBest[1];
+                if (~(mBestBack=0))
+                {
+                    let mBestBack[0]=mBest[0];
+                }
+                else
+                {
+                    let mLast=mBest[0];
+                }
+            }
+            let mBack=mLoop;
+            let mBest=mLoop+mLoop[-1]-1;
+            while (~(mLoop=mBest))
+            {
+                let mLoop[0]=0;
+                let mLoop=mLoop+1;
+            }
+            return mBack;
+        }
+        return 0;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var Array mLoop,mBack;
+        let mLoop=o;
+        let o=o+o[-1]-3;
+        let o[1]=mLoop[-1];
+        
+        let mLoop=mLast;
+        let mBack=0;
+        while ((~(mLoop=0))&(mLoop>o))
+        {
+            let mBack=mLoop;
+            let mLoop=mLoop[0];
+        }
+        if ((mLoop=0)|(o[0]-o[1]>mLoop))
+        {
+            let o[0]=mLoop;
+        }
+        else
+        {
+            let o[1]=o[1]+mLoop[1];
+            let o[0]=mLoop[0];
+        }
+        if (~(mBack=0))
+        {
+            if ((mBack[0]-mBack[1])>o)
+            {
+                let mBack[0]=o;
+            }
+            else
+            {
+                let mBack[1]=mBack[1]+o[1];
+                let mBack[0]=o[0];
+            }
+        }
+        else
+        {
+            let mLast=o;
+        }
+        return;
+    }
+}
